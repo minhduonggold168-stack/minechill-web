@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minechill Network — Tuyệt Tác Minecraft Voxel Showcase</title>
+    <meta name="description" content="Trang chủ chính thức của Minechill Network. Phong cách Apple Showcase tối giản, đen tuyền sang trọng kết hợp đồ họa 3D Minecraft đẳng cấp.">
+    
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- GSAP & ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <style>
+        :root {
+            --bg-pure: #000000;
+            --bg-card: rgba(14, 14, 16, 0.65);
+            --bg-card-hover: rgba(22, 22, 26, 0.75);
+            --border-hairline: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.22);
+            --text-primary: #F5F5F7;
+            --text-secondary: #86868B;
+            --accent-cyan: #00f0ff;
+            --accent-glow: rgba(0, 240, 255, 0.18);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            background-color: var(--bg-pure);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            overflow-x: hidden;
+            selection-background-color: #ffffff;
+            selection-color: #000000;
+        }
+
+        ::selection {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        /* 3D WebGL Canvas Layer */
+        #webgl-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Apple Subtle Spotlight on Pure Black */
+        .ambient-spotlight {
+            position: fixed;
+            width: 700px;
+            height: 700px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 240, 255, 0.04) 0%, transparent 65%);
+            top: 20%;
+            right: 15%;
+            z-index: 0;
+            pointer-events: none;
+            filter: blur(80px);
+        }
+
+        /* Frosted Glass Navigation Pill */
+        .apple-nav {
+            position: fixed;
+            top: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            padding: 8px 16px 8px 24px;
+            background: rgba(12, 12, 14, 0.72);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid var(--border-hairline);
+            border-radius: 9999px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .apple-nav:hover {
+            border-color: rgba(255, 255, 255, 0.16);
+            background: rgba(16, 16, 20, 0.85);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-logo-cube {
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: #ffffff;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-hairline);
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: #30d158;
+            box-shadow: 0 0 8px #30d158;
+            position: relative;
+        }
+
+        .status-dot::after {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            border: 1px solid #30d158;
+            opacity: 0.6;
+            animation: pulseDot 2s infinite ease-out;
+        }
+
+        .status-dot.offline {
+            background-color: #ff9d3b;
+            box-shadow: 0 0 8px #ff9d3b;
+        }
+        .status-dot.offline::after {
+            border-color: #ff9d3b;
+        }
+
+        @keyframes pulseDot {
+            0% { transform: scale(0.8); opacity: 0.8; }
+            100% { transform: scale(2.2); opacity: 0; }
+        }
+
+        /* Apple Dynamic Island Toast */
+        #apple-toast {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px) scale(0.9);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 22px;
+            background: rgba(20, 20, 24, 0.9);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 9999px;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.85);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.45s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        #apple-toast.show {
+            transform: translateX(-50%) translateY(0) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .toast-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ffffff;
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .toast-text {
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .toast-ip {
+            font-family: 'JetBrains Mono', monospace;
+            color: #00f0ff;
+            font-weight: 600;
+        }
+
+        /* Content Layer & Layout */
+        .content-layer {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* HERO SECTION: Pure Apple Space Black Elegance */
+        .hero-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 140px 7vw 80px;
+            position: relative;
+        }
+
+        .hero-split-grid {
+            width: 100%;
+            max-width: 1380px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            align-items: center;
+            gap: 40px;
+        }
+
+        /* Typographic Confidence: Clean on Pure Black, NO Boxy Clutter */
+        .hero-text-block {
+            max-width: 660px;
+            text-align: left;
+        }
+
+        .eyebrow {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 22px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-hairline);
+            border-radius: 9999px;
+        }
+
+        .eyebrow-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #00f0ff;
+            box-shadow: 0 0 6px #00f0ff;
+        }
+
+        .hero-title {
+            font-size: clamp(2.8rem, 5.5vw, 4.6rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1.06;
+            margin-bottom: 24px;
+            color: #FFFFFF;
+        }
+
+        /* Apple Signature Titanium Gradient: Luxury White to Slate Silver */
+        .titanium-gradient {
+            background: linear-gradient(180deg, #FFFFFF 15%, #A1A1A6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1.05rem, 1.4vw, 1.25rem);
+            font-weight: 400;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 38px;
+        }
+
+        /* Apple Luxury Action Buttons */
+        .cta-group {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 42px;
+        }
+
+        .btn-apple-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            background: #ffffff;
+            color: #000000;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-apple-primary:hover {
+            transform: scale(1.03);
+            background: #f0f0f5;
+            box-shadow: 0 6px 25px rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-apple-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            background: rgba(255, 255, 255, 0.06);
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            border: 1px solid var(--border-hairline);
+            backdrop-filter: blur(16px);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-apple-secondary:hover {
+            transform: scale(1.03);
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.22);
+        }
+
+        /* Hairline Spec Badges */
+        .specs-strip {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .spec-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-hairline);
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #a1a1a6;
+        }
+
+        /* Hero Right Stage Badge */
+        .hero-stage-badge {
+            display: flex;
+            justify-content: flex-end;
+            pointer-events: none;
+        }
+
+        .stage-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(14, 14, 16, 0.6);
+            border: 1px solid var(--border-hairline);
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: #71717a;
+            backdrop-filter: blur(16px);
+        }
+
+        /* SECTION STYLING */
+        section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 130px 24px 80px;
+            position: relative;
+        }
+
+        /* Scrollytelling Cards with Apple Frosted Glass */
+        .scrolly-container {
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 180px;
+            margin: 60px 0;
+        }
+
+        .scrolly-card {
+            max-width: 460px;
+            padding: 38px 42px;
+            background: var(--bg-card);
+            backdrop-filter: blur(28px) saturate(180%);
+            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            border: 1px solid var(--border-hairline);
+            border-radius: 28px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            transition: all 0.4s ease;
+        }
+
+        .scrolly-card.left {
+            margin-right: auto;
+        }
+
+        .scrolly-card.right {
+            margin-left: auto;
+        }
+
+        .scrolly-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-4px);
+        }
+
+        .scrolly-badge {
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: #a1a1a6;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .scrolly-title {
+            font-size: 1.9rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 12px;
+            line-height: 1.22;
+            color: #fff;
+        }
+
+        .scrolly-desc {
+            color: var(--text-secondary);
+            font-size: 0.98rem;
+            line-height: 1.62;
+        }
+
+        /* Bento Grid (Apple Style) */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 50px;
+        }
+
+        .bento-item {
+            background: var(--bg-card);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border-hairline);
+            border-radius: 32px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .bento-item:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-4px);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .bento-col-8 {
+            grid-column: span 8;
+        }
+
+        .bento-col-4 {
+            grid-column: span 4;
+        }
+
+        .bento-col-6 {
+            grid-column: span 6;
+        }
+
+        .bento-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-hairline);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            color: #ffffff;
+        }
+
+        .bento-stat {
+            font-size: 3.4rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1;
+            margin-bottom: 10px;
+            background: linear-gradient(180deg, #FFFFFF 20%, #A1A1A6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .bento-heading {
+            font-size: 1.45rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .bento-text {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Direct Connection Section */
+        .connect-card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            width: 100%;
+            max-width: 900px;
+            margin-top: 40px;
+        }
+
+        .connect-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(28px);
+            border: 1px solid var(--border-hairline);
+            border-radius: 28px;
+            padding: 38px;
+            text-align: left;
+            transition: all 0.3s ease;
+        }
+
+        .connect-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8);
+        }
+
+        .connect-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: #a1a1a6;
+            margin-bottom: 16px;
+        }
+
+        .connect-ip-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid var(--border-hairline);
+            border-radius: 16px;
+            padding: 14px 18px;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .connect-ip-box:hover {
+            border-color: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .connect-ip-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.05rem;
+            color: #00f0ff;
+            font-weight: 600;
+        }
+
+        .connect-copy-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .connect-copy-btn:hover {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        /* Footer */
+        footer {
+            padding: 60px 24px;
+            border-top: 1px solid var(--border-hairline);
+            background: #000000;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .footer-content {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: center;
+        }
+
+        /* Mobile Breakpoints */
+        @media (max-width: 900px) {
+            .hero-split-grid {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .hero-text-block {
+                max-width: 100%;
+                text-align: center;
+            }
+            .cta-group {
+                justify-content: center;
+            }
+            .specs-strip {
+                justify-content: center;
+            }
+            .hero-stage-badge {
+                display: none;
+            }
+            .bento-col-8, .bento-col-4, .bento-col-6 {
+                grid-column: span 12;
+            }
+            .connect-card-grid {
+                grid-template-columns: 1fr;
+            }
+            .nav-links {
+                display: none;
+            }
+            .scrolly-container {
+                gap: 80px;
+            }
+            .scrolly-card {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Apple Ambient Subtle Glow on Pure Black -->
+    <div class="ambient-spotlight"></div>
+
+    <!-- Apple Dynamic Island Pill Toast Notification -->
+    <div id="apple-toast">
+        <div class="toast-icon">✓</div>
+        <div class="toast-text">
+            Đã sao chép <span class="toast-ip" id="toast-ip-text">play.minechill.vn</span> vào bộ nhớ tạm!
+        </div>
+    </div>
+
+    <!-- Apple Minimal Floating Navigation Bar -->
+    <header>
+        <nav class="apple-nav">
+            <a href="#" class="nav-logo">
+                <div class="nav-logo-cube">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                        <polyline points="2 17 12 22 22 17"></polyline>
+                        <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
+                </div>
+                <span>Minechill</span>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="#overview">Tổng Quan</a></li>
+                <li><a href="#world">Khám Phá</a></li>
+                <li><a href="#features">Đặc Điểm</a></li>
+                <li><a href="#connect">Tham Gia</a></li>
+            </ul>
+
+            <div class="status-pill" id="nav-status-pill">
+                <div class="status-dot" id="nav-status-dot"></div>
+                <span id="nav-player-count">Đang đồng bộ...</span>
+            </div>
+        </nav>
+    </header>
+
+    <!-- 3D Three.js WebGL Canvas (Pure Black Luxury Voxel Monolith) -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Scrollytelling Content Layer -->
+    <div class="content-layer">
+
+        <!-- SECTION 1: HERO SHOWCASE (Apple Minimal Space Black) -->
+        <section id="overview" class="hero-section">
+            <div class="hero-split-grid">
+                <!-- Cột trái: Typography sang trọng trên nền đen tuyền thuần khiết -->
+                <div class="hero-text-block">
+                    <div class="eyebrow">
+                        <div class="eyebrow-dot"></div>
+                        MINECILL NETWORK • PHIÊN BẢN 2026
+                    </div>
+
+                    <h1 class="hero-title">
+                        Tuyệt tác Sinh Tồn.<br>
+                        <span class="titanium-gradient">Định nghĩa lại Voxel.</span>
+                    </h1>
+
+                    <p class="hero-subtitle">
+                        Trải nghiệm Minecraft thuần khiết với chuẩn mực 20.0 TPS tuyệt đối. Thiết kế tối giản, công nghệ kết nối mượt mà cho cả Java và Bedrock.
+                    </p>
+
+                    <div class="cta-group">
+                        <button class="btn-apple-primary" onclick="copyIP('play.minechill.vn', 'Java')">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            <span>Sao Chép IP Java</span>
+                        </button>
+
+                        <button class="btn-apple-secondary" onclick="copyIP('pe.minechill.vn', 'Bedrock', 19132)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                            </svg>
+                            <span>Sao Chép IP Bedrock</span>
+                        </button>
+                    </div>
+
+                    <div class="specs-strip">
+                        <div class="spec-badge">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            </svg>
+                            20.0 TPS Tuyệt Đối
+                        </div>
+                        <div class="spec-badge">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                            100% Anti-Grief
+                        </div>
+                        <div class="spec-badge">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                            </svg>
+                            500 Slots Online
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Viewport 3D thoáng đãng -->
+                <div class="hero-stage-badge">
+                    <div class="stage-pill">
+                        <div style="width:6px; height:6px; border-radius:50%; background:#00f0ff;"></div>
+                        <span>Khung cảnh 3D thời gian thực • Cuộn để du ngoạn</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: SCROLLYTELLING WORLD EXPLORATION -->
+        <section id="world">
+            <div class="scrolly-container">
+                <div class="scrolly-card left">
+                    <div class="scrolly-badge">✦ VOXEL MONOLITH</div>
+                    <h2 class="scrolly-title">Vỉa Quặng Kim Cương Cổ Đại</h2>
+                    <p class="scrolly-desc">
+                        Ẩn sâu dưới sườn vách đá Deepslate nguyên khối, những khối quặng kim cương quý giá tỏa ánh hào quang ngọc bích huyền bí trong màn đêm tĩnh lặng.
+                    </p>
+                </div>
+
+                <div class="scrolly-card right">
+                    <div class="scrolly-badge">✦ THIÊN NHIÊN BẤT TẬN</div>
+                    <h2 class="scrolly-title">Thác Nước Đổ Vào Hư Không</h2>
+                    <p class="scrolly-desc">
+                        Dòng thác pha lê tuôn trào từ đỉnh cao nguyên, phản chiếu ánh sáng lạnh sắc sảo của mặt trăng trên nền đen sâu thẳm của vũ trụ.
+                    </p>
+                </div>
+
+                <div class="scrolly-card left">
+                    <div class="scrolly-badge">✦ KIẾN TRÚC TRƯỜNG TỒN</div>
+                    <h2 class="scrolly-title">Thế Giới Tự Do Xây Dựng</h2>
+                    <p class="scrolly-desc">
+                        Tự do sáng tạo những công trình kỳ vĩ với độ ổn định tuyệt đối. Mọi khối xây dựng của bạn luôn được bảo vệ an toàn theo thời gian thực.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: BENTO GRID (APPLE LUXURY STYLE) -->
+        <section id="features">
+            <div class="eyebrow">HIỆU NĂNG VÀ CÔNG NGHỆ</div>
+            <h2 class="hero-title" style="font-size: clamp(2.4rem, 5vw, 4rem); text-align: center;">
+                Mạnh mẽ vượt trội.<br>Thiết kế cho tương lai.
+            </h2>
+            <p class="hero-subtitle" style="text-align: center; max-width: 650px; margin: 0 auto 50px;">
+                Được vận hành trên nền tảng máy chủ vật lý chuyên dụng với chuẩn mực 20.0 TPS tuyệt đối.
+            </p>
+
+            <div class="bento-grid">
+                <!-- Bento 1: 20 TPS -->
+                <div class="bento-item bento-col-8">
+                    <div>
+                        <div class="bento-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            </svg>
+                        </div>
+                        <div class="bento-stat">20.0 TPS</div>
+                        <h3 class="bento-heading">Hiệu năng mượt mà không độ trễ</h3>
+                        <p class="bento-text">
+                            Hệ thống CPU Intel Core i9 với xung nhịp 5.8GHz và NVMe Gen 4 RAID 10, duy trì chuẩn mực 20.0 TPS mượt mà ngay cả khi hàng trăm game thủ giao chiến cùng lúc.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Bento 2: Crossplay -->
+                <div class="bento-item bento-col-4">
+                    <div>
+                        <div class="bento-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                <line x1="8" y1="21" x2="16" y2="21"></line>
+                                <line x1="12" y1="17" x2="12.01" y2="21"></line>
+                            </svg>
+                        </div>
+                        <h3 class="bento-heading">Cross-Play Đột Phá</h3>
+                        <p class="bento-text">
+                            Chơi cùng bạn bè trên PC (Java) lẫn Điện thoại, iPad, Android và Console (Bedrock) mượt mà.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Bento 3: Anti-grief & Claim -->
+                <div class="bento-item bento-col-6">
+                    <div>
+                        <div class="bento-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="bento-heading">Bảo Vệ Lãnh Thổ Tuyệt Đối</h3>
+                        <p class="bento-text">
+                            Hệ thống Towny thông minh chống phá hoại (Anti-Grief) toàn diện. Công trình và rương đồ của bạn luôn an toàn 24/7.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Bento 4: Fair Economy -->
+                <div class="bento-item bento-col-6">
+                    <div>
+                        <div class="bento-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                        </div>
+                        <h3 class="bento-heading">Kinh Tế Cân Bằng & Công Bằng</h3>
+                        <p class="bento-text">
+                            Cam kết 100% Không Pay-to-Win. Tự do giao thương, mở cửa hàng buôn bán trao đổi vật phẩm giữa cộng đồng người chơi.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: DIRECT CONNECT & SPECS -->
+        <section id="connect">
+            <div class="eyebrow">KẾT NỐI NGAY HÔM NAY</div>
+            <h2 class="hero-title" style="font-size: clamp(2.4rem, 5vw, 4rem); text-align: center;">
+                Sẵn sàng bước vào thế giới?
+            </h2>
+            <p class="hero-subtitle" style="text-align: center; margin-bottom: 40px;">
+                Sao chép địa chỉ máy chủ và tham gia ngay chỉ với một lần chạm.
+            </p>
+
+            <div class="connect-card-grid">
+                <!-- Java Card -->
+                <div class="connect-card">
+                    <span class="connect-badge">DÀNH CHO PC / MAC / LINUX</span>
+                    <h3 style="font-size: 1.55rem; font-weight: 700; margin-bottom: 8px;">Minecraft Java Edition</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.92rem;">Tương thích phiên bản 1.20 đến 1.21 mới nhất.</p>
+
+                    <div class="connect-ip-box" onclick="copyIP('play.minechill.vn', 'Java')">
+                        <span class="connect-ip-code">play.minechill.vn</span>
+                        <button class="connect-copy-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            Sao chép
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bedrock Card -->
+                <div class="connect-card">
+                    <span class="connect-badge">DÀNH CHO MOBILE / CONSOLE / WIN10</span>
+                    <h3 style="font-size: 1.55rem; font-weight: 700; margin-bottom: 8px;">Minecraft Bedrock (PE)</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.92rem;">IP: pe.minechill.vn • Cổng Port: 19132</p>
+
+                    <div class="connect-ip-box" onclick="copyIP('pe.minechill.vn', 'Bedrock', 19132)">
+                        <span class="connect-ip-code">pe.minechill.vn : 19132</span>
+                        <button class="connect-copy-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            Sao chép
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer>
+            <div class="footer-content">
+                <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #fff;">
+                    <div class="nav-logo-cube" style="width: 18px; height: 18px;"></div>
+                    <span>Minechill Network</span>
+                </div>
+                <p>© 2026 Minechill Network. Không liên kết chính thức với Mojang Studios hoặc Microsoft.</p>
+                <p style="font-size: 0.8rem; opacity: 0.5;">Được chế tác theo phong cách Apple Showcase tối giản trên nền đen tuyền.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- THREE.JS 3D LUXURY VOXEL MONOLITH ON SPACE BLACK -->
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        // ============================================================
+        // 1. TẠO TEXTURE MINECRAFT ĐẲNG CẤP TỐI GIẢN (DEEPSLATE, STONE, ORE)
+        // ============================================================
+        function createPixelTexture(type) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 16;
+            canvas.height = 16;
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+
+            if (type === 'grass_top') {
+                ctx.fillStyle = '#3a6622';
+                ctx.fillRect(0, 0, 16, 16);
+                const greens = ['#437728', '#32581d', '#4c862e', '#294817'];
+                for (let i = 0; i < 45; i++) {
+                    ctx.fillStyle = greens[Math.floor(Math.random() * greens.length)];
+                    ctx.fillRect(Math.floor(Math.random() * 16), Math.floor(Math.random() * 16), 1, 1);
+                }
+            } 
+            else if (type === 'grass_side') {
+                ctx.fillStyle = '#5c432d';
+                ctx.fillRect(0, 0, 16, 16);
+                const browns = ['#6a4e35', '#4f3925', '#412e1e'];
+                for (let i = 0; i < 35; i++) {
+                    ctx.fillStyle = browns[Math.floor(Math.random() * browns.length)];
+                    ctx.fillRect(Math.floor(Math.random() * 16), Math.floor(Math.random() * 16), 1, 1);
+                }
+                ctx.fillStyle = '#3a6622';
+                ctx.fillRect(0, 0, 16, 3);
+                for (let x = 0; x < 16; x++) {
+                    const depth = (x * 7) % 4 === 0 ? 3 : ((x * 3) % 3 === 0 ? 2 : 1);
+                    ctx.fillRect(x, 0, 1, 3 + depth);
+                }
+            }
+            else if (type === 'stone') {
+                ctx.fillStyle = '#55555c';
+                ctx.fillRect(0, 0, 16, 16);
+                const grays = ['#62626b', '#48484f', '#3e3e44'];
+                for (let i = 0; i < 45; i++) {
+                    ctx.fillStyle = grays[Math.floor(Math.random() * grays.length)];
+                    ctx.fillRect(Math.floor(Math.random() * 16), Math.floor(Math.random() * 16), 1, 1);
+                }
+            }
+            else if (type === 'deepslate') {
+                ctx.fillStyle = '#26282f';
+                ctx.fillRect(0, 0, 16, 16);
+                const slates = ['#1d1f24', '#32353e', '#181a1e'];
+                for (let i = 0; i < 50; i++) {
+                    ctx.fillStyle = slates[Math.floor(Math.random() * slates.length)];
+                    ctx.fillRect(Math.floor(Math.random() * 16), Math.floor(Math.random() * 16), 1, 1);
+                }
+            }
+            else if (type === 'diamond_ore') {
+                ctx.fillStyle = '#55555c';
+                ctx.fillRect(0, 0, 16, 16);
+                const cyans = ['#00f0ff', '#38bdf8', '#7dd3fc', '#ffffff'];
+                const spots = [[3,3],[4,3],[3,4], [10,4],[11,5], [6,8],[7,8],[7,9], [12,11],[4,12]];
+                spots.forEach(([x,y]) => {
+                    ctx.fillStyle = '#16333c';
+                    ctx.fillRect(x-1, y-1, 3, 3);
+                });
+                spots.forEach(([x,y], idx) => {
+                    ctx.fillStyle = idx === 0 ? '#ffffff' : cyans[Math.floor(Math.random()*cyans.length)];
+                    ctx.fillRect(x, y, 1, 1);
+                });
+            }
+            else if (type === 'dark_oak_leaves') {
+                ctx.fillStyle = '#264e1e';
+                ctx.fillRect(0, 0, 16, 16);
+                const leafGreens = ['#2f6025', '#1d3d17', '#38732c'];
+                for (let i = 0; i < 45; i++) {
+                    ctx.fillStyle = leafGreens[Math.floor(Math.random()*leafGreens.length)];
+                    ctx.fillRect(Math.floor(Math.random()*16), Math.floor(Math.random()*16), 1, 1);
+                }
+            }
+            else if (type === 'dark_oak_log') {
+                ctx.fillStyle = '#423323';
+                ctx.fillRect(0, 0, 16, 16);
+                const barks = ['#36291c', '#503e2c', '#2c2116'];
+                for (let y = 0; y < 16; y++) {
+                    for (let x = 0; x < 16; x++) {
+                        if (x % 3 === 0) {
+                            ctx.fillStyle = barks[Math.floor(Math.random()*barks.length)];
+                            ctx.fillRect(x, y, 1, 1);
+                        }
+                    }
+                }
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.magFilter = THREE.NearestFilter;
+            texture.minFilter = THREE.NearestFilter;
+            return texture;
+        }
+
+        // ============================================================
+        // 2. KHỞI TẠO THREE.JS VỚI NỀN ĐEN TUYỀN PURE SPACE BLACK
+        // ============================================================
+        const canvas = document.getElementById('webgl-canvas');
+        const scene = new THREE.Scene();
+        // Sương mù đen tuyền tuyệt đối
+        scene.fog = new THREE.FogExp2(0x000000, 0.038);
+
+        const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 120);
+        camera.position.set(2.8, 3.2, 15.5);
+
+        const renderer = new THREE.WebGLRenderer({
+            canvas: canvas,
+            antialias: true,
+            alpha: true,
+            powerPreference: "high-performance"
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.15;
+
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        // Ánh sáng môi trường tối giản, sâu thẳm
+        const ambientLight = new THREE.AmbientLight(0x1a1e28, 1.2);
+        scene.add(ambientLight);
+
+        // Ánh sáng chính Studio Product Light (Ánh sáng trắng bạc sắc nét)
+        const keyLight = new THREE.DirectionalLight(0xffffff, 2.4);
+        keyLight.position.set(12, 18, 12);
+        keyLight.castShadow = true;
+        keyLight.shadow.mapSize.width = 2048;
+        keyLight.shadow.mapSize.height = 2048;
+        keyLight.shadow.camera.near = 0.5;
+        keyLight.shadow.camera.far = 50;
+        const shRange = 12;
+        keyLight.shadow.camera.left = -shRange;
+        keyLight.shadow.camera.right = shRange;
+        keyLight.shadow.camera.top = shRange;
+        keyLight.shadow.camera.bottom = -shRange;
+        keyLight.shadow.bias = -0.0006;
+        scene.add(keyLight);
+
+        // Ánh sáng viền xanh sẫm đối xứng (Apple Rim Light)
+        const rimLight = new THREE.DirectionalLight(0x0088cc, 1.5);
+        rimLight.position.set(-14, 6, -10);
+        scene.add(rimLight);
+
+        // Quầng sáng kim cương phát quang lam ngọc trong bóng tối
+        const diamondPointLight = new THREE.PointLight(0x00f0ff, 4.5, 12);
+        diamondPointLight.position.set(2.5, 0.5, 2.0);
+        scene.add(diamondPointLight);
+
+        // ============================================================
+        // 3. DỰNG KHỐI ĐẢO VOXEL MONOLITH ĐEN SANG TRỌNG
+        // ============================================================
+        const grassTopTex = createPixelTexture('grass_top');
+        const grassSideTex = createPixelTexture('grass_side');
+        const stoneTex = createPixelTexture('stone');
+        const deepslateTex = createPixelTexture('deepslate');
+        const diamondTex = createPixelTexture('diamond_ore');
+        const leavesTex = createPixelTexture('dark_oak_leaves');
+        const logTex = createPixelTexture('dark_oak_log');
+
+        const grassBlockMaterials = [
+            new THREE.MeshStandardMaterial({ map: grassSideTex, roughness: 0.95 }),
+            new THREE.MeshStandardMaterial({ map: grassSideTex, roughness: 0.95 }),
+            new THREE.MeshStandardMaterial({ map: grassTopTex, roughness: 0.95 }),
+            new THREE.MeshStandardMaterial({ map: stoneTex, roughness: 0.95 }),
+            new THREE.MeshStandardMaterial({ map: grassSideTex, roughness: 0.95 }),
+            new THREE.MeshStandardMaterial({ map: grassSideTex, roughness: 0.95 })
+        ];
+
+        const stoneMat = new THREE.MeshStandardMaterial({ map: stoneTex, roughness: 0.85 });
+        const deepslateMat = new THREE.MeshStandardMaterial({ map: deepslateTex, roughness: 0.8 });
+        const logMat = new THREE.MeshStandardMaterial({ map: logTex, roughness: 0.9 });
+        const leavesMat = new THREE.MeshStandardMaterial({ map: leavesTex, roughness: 0.6, transparent: true, opacity: 0.94 });
+
+        // Diamond Ore Material với Emissive phát sáng ánh lam ngọc lộng lẫy
+        const diamondMat = new THREE.MeshStandardMaterial({
+            map: diamondTex,
+            roughness: 0.35,
+            metalness: 0.2,
+            emissive: new THREE.Color(0x00f0ff),
+            emissiveIntensity: 0.85
+        });
+
+        // Nước pha lê sâu thẳm
+        const waterMat = new THREE.MeshStandardMaterial({
+            color: 0x0088cc,
+            transparent: true,
+            opacity: 0.8,
+            roughness: 0.1,
+            metalness: 0.2
+        });
+
+        // Nhóm địa hình chính
+        const islandMonolithGroup = new THREE.Group();
+        // Căn lề phải gọn gàng, tôn vinh typography bên trái
+        islandMonolithGroup.position.set(3.5, -1.0, 0);
+
+        const blockGeo = new THREE.BoxGeometry(1, 1, 1);
+
+        function addVoxel(x, y, z, mat, sx = 1, sy = 1, sz = 1) {
+            const m = new THREE.Mesh(blockGeo, mat);
+            m.position.set(x, y, z);
+            if (sx !== 1 || sy !== 1 || sz !== 1) m.scale.set(sx, sy, sz);
+            m.castShadow = true;
+            m.receiveShadow = true;
+            islandMonolithGroup.add(m);
+            return m;
+        }
+
+        // --- XÂY DỰNG ĐỊA HÌNH KHỐI ĐẢO NGUYÊN BẢN SANG TRỌNG ---
+        for (let x = -4; x <= 4; x++) {
+            for (let z = -4; z <= 4; z++) {
+                const dist = Math.sqrt(x * x + z * z);
+                if (dist > 4.8) continue;
+
+                // Tầng cỏ mặt trên
+                addVoxel(x, 0, z, grassBlockMaterials);
+
+                // Tầng đá bên dưới
+                addVoxel(x, -1, z, stoneMat);
+
+                // Tầng đá sâu & Quặng kim cương lộ thiên
+                if (dist <= 3.8) {
+                    const isDiamond = (x === 2 && z === 1) || (x === 1 && z === 2) || (x === -2 && z === 0) || (x === 0 && z === -2);
+                    if (isDiamond) {
+                        addVoxel(x, -2, z, diamondMat);
+                    } else {
+                        addVoxel(x, -2, z, deepslateMat);
+                    }
+                }
+
+                // Tầng nhũ đá nhọn bên dưới
+                if (dist <= 2.4) {
+                    addVoxel(x, -3, z, deepslateMat);
+                }
+                if (dist <= 1.4) {
+                    addVoxel(x, -4, z, deepslateMat);
+                }
+            }
+        }
+        addVoxel(0, -5, 0, deepslateMat);
+
+        // --- CÂY SỒI CỔ THỤ XANH THẴM MINECRAFT ---
+        const tx = -1, tz = -1;
+        addVoxel(tx, 1, tz, logMat);
+        addVoxel(tx, 2, tz, logMat);
+        addVoxel(tx, 3, tz, logMat);
+        addVoxel(tx, 4, tz, logMat);
+
+        for (let lx = -2; lx <= 2; lx++) {
+            for (let lz = -2; lz <= 2; lz++) {
+                for (let ly = 4; ly <= 5; ly++) {
+                    if (Math.abs(lx) === 2 && Math.abs(lz) === 2 && Math.random() > 0.4) continue;
+                    addVoxel(tx + lx, ly, tz + lz, leavesMat);
+                }
+            }
+        }
+        addVoxel(tx, 6, tz, leavesMat);
+
+        // --- DÒNG THÁC NƯỚC PHA LÊ TUÔN ĐỔ VÀO HƯ KHÔNG ---
+        addVoxel(3, 0, 1, waterMat);
+        addVoxel(4, 0, 1, waterMat);
+        const waterFallList = [];
+        for (let wy = -1; wy >= -6; wy--) {
+            const wm = addVoxel(4, wy, 1, waterMat, 0.95, 1.05, 1.1);
+            waterFallList.push(wm);
+        }
+
+        // --- HẠT TINH THỂ KIM CƯƠNG LAM NGỌC BAY LƠ LỬNG ---
+        const particleCount = 60;
+        const particleGeo = new THREE.BufferGeometry();
+        const particlePos = new Float32Array(particleCount * 3);
+        const particleSpeeds = [];
+
+        for (let i = 0; i < particleCount; i++) {
+            particlePos[i * 3] = (Math.random() - 0.5) * 12;
+            particlePos[i * 3 + 1] = Math.random() * 8 - 3;
+            particlePos[i * 3 + 2] = (Math.random() - 0.5) * 12;
+            particleSpeeds.push({
+                y: 0.008 + Math.random() * 0.012,
+                orbit: 0.002 + Math.random() * 0.004
+            });
+        }
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
+
+        const particleMat = new THREE.PointsMaterial({
+            color: 0x00f0ff,
+            size: 0.12,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+        const particles = new THREE.Points(particleGeo, particleMat);
+        islandMonolithGroup.add(particles);
+
+        scene.add(islandMonolithGroup);
+
+        // ============================================================
+        // 4. GSAP SCROLLTRIGGER SCROLLYTELLING ĐIỆN ẢNH 360 ĐỘ
+        // ============================================================
+        const scrollTimeline = gsap.timeline({
+            scrollTrigger: {
+                trigger: ".content-layer",
+                start: "top top",
+                end: "bottom bottom",
+                scrub: 1.3
+            }
+        });
+
+        // Xoay 360 độ hoàn mỹ và lùi camera sang trọng
+        scrollTimeline
+            // Mốc 1: Khám phá Quặng & Thác Nước (Section 2) -> Xoay 110 độ
+            .to(islandMonolithGroup.rotation, {
+                y: Math.PI * 0.7,
+                x: 0.15,
+                ease: "power1.inOut"
+            }, 0)
+            .to(camera.position, {
+                x: 0.5,
+                y: 4.2,
+                z: 15.0,
+                ease: "power1.inOut"
+            }, 0)
+            // Mốc 2: Bento Grid (Section 3) -> Xoay tiếp 220 độ, góc cao sang trọng
+            .to(islandMonolithGroup.rotation, {
+                y: Math.PI * 1.4,
+                x: -0.1,
+                ease: "power1.inOut"
+            }, 0.5)
+            .to(camera.position, {
+                x: -2.5,
+                y: 4.8,
+                z: 16.0,
+                ease: "power1.inOut"
+            }, 0.5)
+            // Mốc 3: Kết nối (Section 4) -> Trọn vẹn 360 độ (2 * PI)
+            .to(islandMonolithGroup.rotation, {
+                y: Math.PI * 2.0,
+                x: 0.05,
+                ease: "power1.inOut"
+            }, 1)
+            .to(camera.position, {
+                x: 1.5,
+                y: 3.2,
+                z: 16.5,
+                ease: "power1.inOut"
+            }, 1);
+
+        // ============================================================
+        // 5. MOUSE PARALLAX & RENDER LOOP CHÍNH
+        // ============================================================
+        let mouseX = 0, mouseY = 0;
+        let targetX = 0, targetY = 0;
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+            mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+        });
+
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const elapsedTime = clock.getElapsedTime();
+
+            // Hiệu ứng bồng bềnh lơ lửng tối giản
+            islandMonolithGroup.position.y = -1.0 + Math.sin(elapsedTime * 1.1) * 0.22;
+
+            // Nhịp thở phát quang kim cương lam ngọc sang trọng
+            const pulse = (Math.sin(elapsedTime * 2.8) + 1.2) * 0.5;
+            diamondMat.emissiveIntensity = 0.55 + pulse;
+            diamondPointLight.intensity = 3.2 + pulse * 1.6;
+
+            // Dòng thác nước đổ gợn sóng nhẹ
+            waterFallList.forEach((w, idx) => {
+                w.position.x = 4 + Math.sin(elapsedTime * 5 + idx * 0.4) * 0.03;
+            });
+
+            // Parallax mượt mà theo chuột
+            targetX += (mouseX * 0.5 - targetX) * 0.05;
+            targetY += (mouseY * 0.3 - targetY) * 0.05;
+            islandMonolithGroup.rotation.z = -targetX * 0.07;
+
+            // Chuyển động hạt tinh thể bay
+            const pArr = particleGeo.attributes.position.array;
+            for (let i = 0; i < particleCount; i++) {
+                pArr[i * 3 + 1] += particleSpeeds[i].y;
+                if (pArr[i * 3 + 1] > 6) {
+                    pArr[i * 3 + 1] = -3;
+                }
+            }
+            particleGeo.attributes.position.needsUpdate = true;
+
+            camera.lookAt(islandMonolithGroup.position.x * 0.5, 0, 0);
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Responsive Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        });
+
+        // ============================================================
+        // 6. TOAST VIÊN THUỐC APPLE & SAO CHÉP IP
+        // ============================================================
+        let toastTimeout;
+        function copyIP(ip, type = 'Java', port = null) {
+            const fullText = port ? `${ip}:${port}` : ip;
+            navigator.clipboard.writeText(fullText).then(() => {
+                const toast = document.getElementById('apple-toast');
+                const toastIp = document.getElementById('toast-ip-text');
+                toastIp.innerText = `${type}: ${fullText}`;
+
+                toast.classList.add('show');
+                clearTimeout(toastTimeout);
+                toastTimeout = setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2800);
+            }).catch(err => {
+                console.error("Lỗi sao chép:", err);
+            });
+        }
+
+        // ============================================================
+        // 7. ĐỒNG BỘ TRẠNG THÁI SERVER TỪ API FLASK
+        // ============================================================
+        async function updateServerStatus() {
+            try {
+                const res = await fetch('/api/status');
+                if (res.ok) {
+                    const data = await res.json();
+                    const dot = document.getElementById('nav-status-dot');
+                    const countSpan = document.getElementById('nav-player-count');
+
+                    if (data.online) {
+                        dot.classList.remove('offline');
+                        countSpan.innerText = `${data.players.online} Người chơi online`;
+                    } else {
+                        dot.classList.add('offline');
+                        countSpan.innerText = `Máy chủ đang hoạt động`;
+                    }
+                }
+            } catch (e) {
+                console.warn("Lỗi đồng bộ trạng thái:", e);
+            }
+        }
+
+        updateServerStatus();
+        setInterval(updateServerStatus, 30000);
+    </script>
+</body>
+</html>
